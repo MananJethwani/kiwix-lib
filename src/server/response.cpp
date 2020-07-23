@@ -21,10 +21,10 @@ namespace
 {
 // some utilities
 
-std::string get_mime_type(const kiwix::Entry& entry)
+std::string get_mime_type(std::shared_ptr<zim::Item> item)
 {
   try {
-    return entry.getMimetype();
+    return item->getMimetype();
   } catch (exception& e) {
     return "application/octet-stream";
   }
@@ -66,17 +66,17 @@ static MHD_Result print_key_value (void *cls, enum MHD_ValueKind kind,
 
 
 struct RunningResponse {
-   kiwix::Entry entry;
+   std::shared_ptr<zim::Item> item;
    int range_start;
 
-   RunningResponse(kiwix::Entry entry,
+   RunningResponse(std::shared_ptr<zim::Item> item,
                    int range_start) :
-     entry(entry),
+     item(item),
      range_start(range_start)
    {}
 };
 
-static ssize_t callback_reader_from_entry(void* cls,
+static ssize_t callback_reader_from_item(void* cls,
                                   uint64_t pos,
                                   char* buf,
                                   size_t max)
@@ -85,13 +85,13 @@ static ssize_t callback_reader_from_entry(void* cls,
 
   size_t max_size_to_set = min<size_t>(
     max,
-    response->entry.getSize() - pos - response->range_start);
+    response->item->getSize() - pos - response->range_start);
 
   if (max_size_to_set <= 0) {
     return MHD_CONTENT_READER_END_WITH_ERROR;
   }
 
-  zim::Blob blob = response->entry.getBlob(response->range_start+pos, max_size_to_set);
+  zim::Blob blob = response->item->getData(response->range_start+pos, max_size_to_set);
   memcpy(buf, blob.data(), max_size_to_set);
   return max_size_to_set;
 }
@@ -249,8 +249,8 @@ Response::create_entry_mhd_response() const
   const auto content_length = m_byteRange.length();
   MHD_Response* response = MHD_create_response_from_callback(content_length,
                                                16384,
-                                               callback_reader_from_entry,
-                                               new RunningResponse(m_entry, m_byteRange.first()),
+                                               callback_reader_from_item,
+                                               new RunningResponse(m_item, m_byteRange.first()),
                                                callback_free_response);
   MHD_add_response_header(response,
     MHD_HTTP_HEADER_CONTENT_TYPE, m_mimeType.c_str());
@@ -258,7 +258,7 @@ Response::create_entry_mhd_response() const
   if ( m_byteRange.kind() == ByteRange::RESOLVED_PARTIAL_CONTENT ) {
     std::ostringstream oss;
     oss << "bytes " << m_byteRange.first() << "-" << m_byteRange.last()
-        << "/" << m_entry.getSize();
+        << "/" << m_item->getSize();
 
     MHD_add_response_header(response,
       MHD_HTTP_HEADER_CONTENT_RANGE, oss.str().c_str());
@@ -328,17 +328,17 @@ void Response::set_redirection(const std::string& url) {
 }
 
 void Response::set_entry(const Entry& entry, const RequestContext& request) {
-  m_entry = entry;
+  m_item = entry.getZimEntry().getItem();
   m_mode = ResponseMode::ENTRY;
 
-  const std::string mimeType = get_mime_type(entry);
+  const std::string mimeType = get_mime_type(m_item);
   set_mimeType(mimeType);
   set_cacheable();
 
-  m_byteRange = request.get_range().resolve(entry.getSize());
+  m_byteRange = request.get_range().resolve(m_item->getSize());
   const bool noRange = m_byteRange.kind() == ByteRange::RESOLVED_FULL_CONTENT;
   if ( noRange && is_compressible_mime_type(mimeType) ) {
-    zim::Blob raw_content = entry.getBlob();
+    zim::Blob raw_content = m_item->getData();
     const std::string content = string(raw_content.data(), raw_content.size());
 
     set_content(content);

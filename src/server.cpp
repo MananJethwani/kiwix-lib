@@ -931,35 +931,33 @@ Response InternalServer::handle_content(const RequestContext& request)
     urlStr = urlStr.substr(1);
   }
 
-  kiwix::Entry entry;
-
   try {
-    entry = reader->getEntryFromPath(urlStr);
+    auto entry = reader->getEntryFromPath(urlStr);
     if (entry.isRedirect() || urlStr.empty()) {
       // If urlStr is empty, we want to mainPage.
       // We must do a redirection to the real page.
       return build_redirect(bookName, entry.getFinalEntry());
     }
+
+    auto response = get_default_response();
+
+    response.set_entry(entry, request);
+
+    if (m_verbose.load()) {
+      printf("Found %s\n", entry.getPath().c_str());
+      printf("mimeType: %s\n", response.get_mimeType().c_str());
+    }
+
+    if (response.get_mimeType().find("text/html") != string::npos)
+      response.set_taskbar(bookName, reader->getTitle());
+
+    return response;
   } catch(kiwix::NoEntry& e) {
     if (m_verbose.load())
       printf("Failed to find %s\n", urlStr.c_str());
 
     return build_404(request, bookName);
   }
-
-  auto response = get_default_response();
-
-  response.set_entry(entry, request);
-
-  if (m_verbose.load()) {
-    printf("Found %s\n", entry.getPath().c_str());
-    printf("mimeType: %s\n", response.get_mimeType().c_str());
-  }
-
-  if (response.get_mimeType().find("text/html") != string::npos)
-    response.set_taskbar(bookName, reader->getTitle());
-
-  return response;
 }
 
 }

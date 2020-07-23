@@ -3,7 +3,6 @@ configure_file(input : 'data/example.zim',
                copy: true )
 
 tests = [
-    'parseUrl',
     'library',
     'regex',
     'tagParsing',

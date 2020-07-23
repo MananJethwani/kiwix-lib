@@ -84,7 +84,7 @@ class Response {
     ResponseMode m_mode;
     std::string m_root;
     std::string m_content;
-    Entry m_entry;
+    std::shared_ptr<zim::Item> m_item;
     std::string m_mimeType;
     int m_returnCode;
     bool m_withTaskbar;
