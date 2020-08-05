@@ -94,7 +94,7 @@ std::string SearchRenderer::getHtml()
 
   auto resultStart = mp_searcher->getResultStart();
   auto resultEnd = mp_searcher->getResultEnd();
-  auto resultCountPerPage = resultEnd - resultStart;
+  auto resultCountPerPage = this->resultCountPerPage;
   auto estimatedResultCount = mp_searcher->getEstimatedResultCount();
   auto currentPage = 0U;
   auto pageStart = 0U;

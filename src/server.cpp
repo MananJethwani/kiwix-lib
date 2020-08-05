@@ -713,6 +713,10 @@ Response InternalServer::handle_search(const RequestContext& request)
   try {
     end = request.get_argument<unsigned int>("end");
   } catch (const std::exception&) {}
+  auto pageLength=25;
+  try{
+    pageLength=request.get_argument<unsigned int>("pageLenth");
+  }catch(const std::exception&){}
   if (start>end) {
     auto tmp = start;
     start = end;
@@ -736,6 +740,7 @@ Response InternalServer::handle_search(const RequestContext& request)
     renderer.setSearchContent(bookName);
     renderer.setProtocolPrefix(m_root + "/");
     renderer.setSearchProtocolPrefix(m_root + "/search?");
+    renderer.setResultCountPerPage(pageLength);
     response.set_content(renderer.getHtml());
   } catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
