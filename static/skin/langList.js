@@ -1,4 +1,5 @@
-{
+/* exported variableName */
+var langList = {
   "aar": "Afar",
   "afr": "Afrikaans",
   "aka": "Akan",

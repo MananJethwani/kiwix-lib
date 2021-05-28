@@ -1,4 +1,5 @@
-{
+/* exported variableName */
+var categoryList = {
   "other": "Other",
   "gutenberg": "Gutenberg",
   "mooc": "Mooc",
