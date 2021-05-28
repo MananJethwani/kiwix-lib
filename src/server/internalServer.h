@@ -84,7 +84,6 @@ class InternalServer {
                                             kiwix::OPDSDumper& opdsDumper);
 
     MustacheData get_default_data() const;
-    MustacheData homepage_data() const;
 
     std::shared_ptr<Reader> get_reader(const std::string& bookName) const;
     bool etag_not_needed(const RequestContext& r) const;
@@ -107,7 +106,7 @@ class InternalServer {
     std::string m_server_id;
 
     friend std::unique_ptr<Response> Response::build(const InternalServer& server);
-    friend std::unique_ptr<ContentResponse> ContentResponse::build(const InternalServer& server, const std::string& content, const std::string& mimetype);
+    friend std::unique_ptr<ContentResponse> ContentResponse::build(const InternalServer& server, const std::string& content, const std::string& mimetype, bool isHomePage);
     friend std::unique_ptr<Response> ItemResponse::build(const InternalServer& server, const RequestContext& request, const zim::Item& item);
     friend std::unique_ptr<Response> Response::build_500(const InternalServer& server, const std::string& msg);
 
